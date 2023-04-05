@@ -1,0 +1,99 @@
+
+DOCKER INSTALLATION
+-------------------
+
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+sudo systemctl start docker
+sudo docker run hello-world
+sudo usermod -aG docker $USER && newgrp docker
+
+
+MINIKUBE INSTALLATION
+---------------------
+
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo cp kubectl /usr/local/bin/ && sudo chmod +x /usr/local/bin/kubectl
+minikube start --driver docker
+minikube status
+kubectl cluster-info
+kubectl get nodes
+
+
+Test Kubernetes by Deploying Sample Nginx Application
+-----------------------------------------------------
+
+kubectl create deployment nginx-demo --image=nginx
+kubectl expose deployment nginx-demo --type NodePort --port=80
+kubectl get pods,svc
+minikube service nginx-demo --url
+
+
+Managing Minikube Addons
+------------------------
+
+minikube addons list
+minikube addons enable dashboard
+minikube addons enable ingress
+
+
+Managing Minikube Cluster
+-------------------------
+
+minikube stop
+minikube start
+minikube delete
+minikube config set memory 4096
+minikube stop && minikube start
+
+
+Install HELM
+-------------
+
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+
+
+Installing Prometheus in minikube
+---------------------------------
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm install prometheus prometheus-community/prometheus
+kubectl expose service prometheus-server --type=NodePort --target-port=9090 --name=prometheus-server-np
+minikube service prometheus-server-np
+
+
+Install Grafana
+----------------
+
+helm repo add stable-grafana https://grafana.github.io/helm-charts
+helm install grafana stable-grafana/grafana
+kubectl get secret --namespace default grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+kubectl expose service grafana --type=NodePort --target-port=3000 --name=grafana-np
+minikube service grafana-np
+
+
+Configure Prometheus Datasource
+-------------------------------
+
+Login in Grafana
+We need to head to Configuration > Datasources and add a new data source, select prometheus.
+The URL for our Prometheus instance is the name of the service http://prometheus-server:80
+save.
+
+
+Kubernetes Dashboard bootstrap
+-------------------------------
+
+I will be using this one https://grafana.com/grafana/dashboards/6417, but you can use any other Dashboard.
+We head to Create (+) > Import section to Import via grafana.com and we set 6417 into the id field and click Load.
+In the dashboard configuration we need to select the Prometheus Datasource we created in the earlier step.
+Once we confirm the Import dialog, we’ll be redirected to the new Dashboard.
+
+
+
+
