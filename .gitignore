@@ -1,0 +1,5 @@
+*.tfstate
+*.tfstate.backup
+*.lock.hcl
+my-gcp-learning-382811-943c7b905bde.json
+.terraform
